@@ -1,5 +1,5 @@
 {
-  description = "NordVPN CLI + daemon for NixOS, with an automated version-bump pipeline";
+  description = "NordVPN CLI + daemon + GUI for NixOS, with an automated version-bump pipeline";
 
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
@@ -10,13 +10,17 @@
     let
       systems = [ "x86_64-linux" ];
       forAllSystems = nixpkgs.lib.genAttrs systems;
-      # NordVPN's client is unfree; allow just this package so the flake's own
-      # outputs (package, checks, CI) build without callers tweaking config.
+      # NordVPN's client is unfree; allow just these packages so the flake's own
+      # outputs (packages, checks, CI) build without callers tweaking config.
+      unfreeNames = [
+        "nordvpn"
+        "nordvpn-gui"
+      ];
       pkgsFor =
         system:
         import nixpkgs {
           inherit system;
-          config.allowUnfreePredicate = pkg: nixpkgs.lib.getName pkg == "nordvpn";
+          config.allowUnfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) unfreeNames;
         };
     in
     {
@@ -28,6 +32,7 @@
         in
         rec {
           nordvpn = pkgs.callPackage ./pkgs/nordvpn { };
+          nordvpn-gui = pkgs.callPackage ./pkgs/nordvpn-gui { };
           default = nordvpn;
         }
       );
@@ -36,6 +41,7 @@
       #   nixpkgs.overlays = [ nordvpn-nix.overlays.default ];
       overlays.default = final: _prev: {
         nordvpn = final.callPackage ./pkgs/nordvpn { };
+        nordvpn-gui = final.callPackage ./pkgs/nordvpn-gui { };
       };
 
       # Importable NixOS module:
@@ -49,6 +55,7 @@
       # `nix flake check` builds the package and evaluates a sample host.
       checks = forAllSystems (system: {
         nordvpn = self.packages.${system}.nordvpn;
+        nordvpn-gui = self.packages.${system}.nordvpn-gui;
       });
 
       # `nix run .#update` -> bump pkgs/nordvpn/source.json to newest release.

@@ -26,5 +26,7 @@ jobs:
       - name: Check flake
         run: nix flake check --print-build-logs
 
-      - name: Build package
-        run: nix build .#nordvpn --print-build-logs
+      - name: Build packages
+        run: |
+          nix build .#nordvpn --print-build-logs
+          nix build .#nordvpn-gui --print-build-logs

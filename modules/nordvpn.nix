@@ -22,6 +22,19 @@ in
       description = "The NordVPN package to use (CLI + daemon).";
     };
 
+    gui = {
+      enable = mkEnableOption ''
+        the NordVPN desktop GUI. The GUI is a front-end for the daemon, so this
+        also requires `services.nordvpn.enable`'';
+
+      package = mkOption {
+        type = types.package;
+        default = self.packages.${pkgs.stdenv.hostPlatform.system}.nordvpn-gui;
+        defaultText = literalExpression "nordvpn-nix.packages.\${system}.nordvpn-gui";
+        description = "The NordVPN GUI package to use.";
+      };
+    };
+
     users = mkOption {
       type = types.listOf types.str;
       default = [ ];
@@ -43,7 +56,7 @@ in
   };
 
   config = mkIf cfg.enable {
-    environment.systemPackages = [ cfg.package ];
+    environment.systemPackages = [ cfg.package ] ++ optional cfg.gui.enable cfg.gui.package;
 
     users.groups.nordvpn = { };
 

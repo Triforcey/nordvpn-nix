@@ -52,7 +52,7 @@ let
     inherit pname version;
 
     src = fetchurl {
-      inherit (source) url hash;
+      inherit (source.cli) url hash;
     };
 
     buildInputs = [

@@ -12,7 +12,9 @@
 #   new_version=<y>
 set -euo pipefail
 
-MIRROR="https://repo.nordvpn.com/deb/nordvpn/debian/pool/main/n/nordvpn"
+POOL="https://repo.nordvpn.com/deb/nordvpn/debian/pool/main/n"
+CLI_MIRROR="${POOL}/nordvpn"
+GUI_MIRROR="${POOL}/nordvpn-gui"
 
 # Locate the repo root. When run via `nix run .#update` the script lives in the
 # read-only Nix store, so we cannot use its own location -- walk up from $PWD
@@ -54,7 +56,7 @@ echo "Current pinned version: ${current_version}"
 
 echo "Querying mirror for available releases..."
 latest_version="$(
-  curl -fsSL "${MIRROR}/" \
+  curl -fsSL "${CLI_MIRROR}/" \
     | grep -oE 'nordvpn_[0-9]+\.[0-9]+\.[0-9]+_amd64\.deb' \
     | sed -E 's/nordvpn_([0-9.]+)_amd64\.deb/\1/' \
     | sort -V -u \
@@ -78,21 +80,38 @@ if [ "${latest_version}" = "${current_version}" ] || [ "${newest}" != "${latest_
   exit 0
 fi
 
-url="${MIRROR}/nordvpn_${latest_version}_amd64.deb"
-echo "Prefetching ${url} ..."
-hash="$(nix store prefetch-file --json "${url}" | jq -r .hash)"
-if [ -z "${hash}" ] || [ "${hash}" = "null" ]; then
-  echo "ERROR: failed to prefetch hash for ${url}." >&2
-  exit 1
-fi
-echo "New hash: ${hash}"
+# The GUI package shares the CLI's version (it Depends on nordvpn (>= ver)).
+cli_url="${CLI_MIRROR}/nordvpn_${latest_version}_amd64.deb"
+gui_url="${GUI_MIRROR}/nordvpn-gui_${latest_version}_amd64.deb"
+
+prefetch() {
+  local url="$1" h
+  echo "Prefetching ${url} ..." >&2
+  h="$(nix store prefetch-file --json "${url}" | jq -r .hash)"
+  if [ -z "${h}" ] || [ "${h}" = "null" ]; then
+    echo "ERROR: failed to prefetch hash for ${url}." >&2
+    exit 1
+  fi
+  echo "${h}"
+}
+
+cli_hash="$(prefetch "${cli_url}")"
+echo "New CLI hash: ${cli_hash}"
+gui_hash="$(prefetch "${gui_url}")"
+echo "New GUI hash: ${gui_hash}"
 
 tmp="$(mktemp)"
 jq -n \
   --arg version "${latest_version}" \
-  --arg url "${url}" \
-  --arg hash "${hash}" \
-  '{version: $version, url: $url, hash: $hash}' >"${tmp}"
+  --arg cli_url "${cli_url}" \
+  --arg cli_hash "${cli_hash}" \
+  --arg gui_url "${gui_url}" \
+  --arg gui_hash "${gui_hash}" \
+  '{
+    version: $version,
+    cli: { url: $cli_url, hash: $cli_hash },
+    gui: { url: $gui_url, hash: $gui_hash }
+  }' >"${tmp}"
 mv "${tmp}" "${SOURCE_JSON}"
 
 echo "Updated ${SOURCE_JSON}: ${current_version} -> ${latest_version}"

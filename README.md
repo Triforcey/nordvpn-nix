@@ -1,12 +1,13 @@
 # nordvpn-nix
 
-The official **NordVPN** CLI + daemon packaged for NixOS, with a self-maintaining
-version pipeline. A scheduled GitHub Actions workflow watches NordVPN's apt
-mirror, bumps the pinned release, verifies it builds, and opens a pull request —
-so the package does not rot when NordVPN prunes old `.deb` files from its mirror.
+The official **NordVPN** CLI + daemon (and the desktop **GUI**) packaged for
+NixOS, with a self-maintaining version pipeline. A scheduled GitHub Actions
+workflow watches NordVPN's apt mirror, bumps the pinned release, verifies it
+builds, and opens a pull request — so the packages do not rot when NordVPN prunes
+old `.deb` files from its mirror.
 
-- Flake package: `packages.<system>.nordvpn`
-- Overlay: `overlays.default` (adds `pkgs.nordvpn`)
+- Flake packages: `packages.<system>.nordvpn`, `packages.<system>.nordvpn-gui`
+- Overlay: `overlays.default` (adds `pkgs.nordvpn` and `pkgs.nordvpn-gui`)
 - NixOS module: `nixosModules.nordvpn` (`services.nordvpn.*`)
 - Auto-update app: `nix run .#update`
 
@@ -33,6 +34,7 @@ so the package does not rot when NordVPN prunes old `.deb` files from its mirror
           services.nordvpn = {
             enable = true;
             users = [ "alice" ]; # added to the `nordvpn` group
+            gui.enable = true;   # optional desktop GUI
           };
         }
       ];
@@ -58,6 +60,11 @@ $ nordvpn connect
 | `package`      | package         | this flake's `nordvpn`          | Override the package (e.g. a pinned revision).                             |
 | `users`        | list of str     | `[ ]`                           | Users added to the `nordvpn` group (control the daemon without root).      |
 | `openFirewall` | bool            | `true`                          | Relax reverse-path filtering and open UDP 1194 / TCP 443 for OpenVPN fallback. |
+| `gui.enable`   | bool            | `false`                         | Also install the NordVPN desktop GUI (a front-end for the daemon).         |
+| `gui.package`  | package         | this flake's `nordvpn-gui`      | Override the GUI package.                                                  |
+
+The GUI is a thin front-end that talks to `nordvpnd`, so `gui.enable` requires
+`enable = true`. It appears in your app launcher as **NordVPN**.
 
 ## Overlay only (no module)
 
@@ -72,13 +79,15 @@ You then wire up the daemon yourself, or just use the bundled module.
 
 ```console
 $ nix run github:Triforcey/nordvpn-nix#nordvpn -- --version
+$ nix run github:Triforcey/nordvpn-nix#nordvpn-gui
 ```
 
 ## How the auto-update works
 
 The version pin lives in [`pkgs/nordvpn/source.json`](pkgs/nordvpn/source.json)
-(version + URL + hash) — **data, not Nix code**. The build reads it via
-`lib.importJSON`.
+(a shared `version` plus per-artifact `cli`/`gui` URL + hash) — **data, not Nix
+code**. Both packages read it via `lib.importJSON`, so the CLI and GUI stay
+version-locked (the GUI `Depends: nordvpn (>= <version>)`).
 
 - [`scripts/update.sh`](scripts/update.sh) queries the mirror, selects the
   highest semver, prefetches the SRI hash, and rewrites `source.json`. It is a
