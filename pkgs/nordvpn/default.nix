@@ -1,6 +1,6 @@
 {
   autoPatchelfHook,
-  buildFHSEnvChroot ? false,
+  buildFHSEnv ? false,
   buildFHSUserEnv ? false,
   dpkg,
   fetchurl,
@@ -36,7 +36,7 @@ let
   inherit (source) version;
 
   buildEnv =
-    if builtins.typeOf buildFHSEnvChroot == "set" then buildFHSEnvChroot else buildFHSUserEnv;
+    if builtins.typeOf buildFHSEnv == "set" then buildFHSEnvChroot else buildFHSUserEnv;
 
   # NordVPN's daemon links against libxml2 2.13.x; nixpkgs has moved past it.
   libxml2_13 = libxml2.overrideAttrs rec {
