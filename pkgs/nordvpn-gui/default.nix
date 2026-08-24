@@ -5,6 +5,7 @@
   lib,
   makeWrapper,
   stdenv,
+  system,
   wrapGAppsHook3,
   # runtime / link deps for the Flutter + GTK app
   atk,
@@ -36,7 +37,7 @@ stdenv.mkDerivation {
   inherit pname version;
 
   src = fetchurl {
-    inherit (source.gui) url hash;
+    inherit (source.gui.${system}) url hash;
   };
 
   nativeBuildInputs = [
@@ -102,7 +103,10 @@ stdenv.mkDerivation {
     '';
     homepage = "https://www.nordvpn.com";
     license = licenses.unfree;
-    platforms = [ "x86_64-linux" ];
+    platforms = [
+      "x86_64-linux"
+      "aarch64-linux"
+    ];
     mainProgram = "nordvpn-gui";
   };
 }
