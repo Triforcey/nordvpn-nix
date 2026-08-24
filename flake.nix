@@ -8,7 +8,10 @@
   outputs =
     { self, nixpkgs }:
     let
-      systems = [ "x86_64-linux" ];
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+      ];
       forAllSystems = nixpkgs.lib.genAttrs systems;
       # NordVPN's client is unfree; allow just these packages so the flake's own
       # outputs (packages, checks, CI) build without callers tweaking config.
@@ -31,8 +34,8 @@
           pkgs = pkgsFor system;
         in
         rec {
-          nordvpn = pkgs.callPackage ./pkgs/nordvpn { };
-          nordvpn-gui = pkgs.callPackage ./pkgs/nordvpn-gui { };
+          nordvpn = pkgs.callPackage ./pkgs/nordvpn { inherit system; };
+          nordvpn-gui = pkgs.callPackage ./pkgs/nordvpn-gui { inherit system; };
           default = nordvpn;
         }
       );
@@ -85,6 +88,6 @@
         }
       );
 
-      formatter = forAllSystems (system: (pkgsFor system).nixfmt-rfc-style);
+      formatter = forAllSystems (system: (pkgsFor system).nixfmt);
     };
 }

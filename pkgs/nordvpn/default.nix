@@ -18,6 +18,7 @@
   libcap_ng,
   zlib,
   sqlite,
+  system,
   wireguard-tools,
 }:
 
@@ -35,8 +36,7 @@ let
   pname = "nordvpn";
   inherit (source) version;
 
-  buildEnv =
-    if builtins.typeOf buildFHSEnv == "set" then buildFHSEnv else buildFHSUserEnv;
+  buildEnv = if builtins.typeOf buildFHSEnv == "set" then buildFHSEnv else buildFHSUserEnv;
 
   # NordVPN's daemon links against libxml2 2.13.x; nixpkgs has moved past it.
   libxml2_13 = libxml2.overrideAttrs rec {
@@ -52,7 +52,7 @@ let
     inherit pname version;
 
     src = fetchurl {
-      inherit (source.cli) url hash;
+      inherit (source.cli.${system}) url hash;
     };
 
     buildInputs = [
@@ -132,7 +132,10 @@ stdenv.mkDerivation {
     description = "CLI client for NordVPN";
     homepage = "https://www.nordvpn.com";
     license = licenses.unfree;
-    platforms = [ "x86_64-linux" ];
+    platforms = [
+      "x86_64-linux"
+      "aarch64-linux"
+    ];
     mainProgram = "nordvpn";
   };
 }
