@@ -1,11 +1,11 @@
 {
-  "version": "5.0.0",
+  "version": "5.4.1",
   "cli": {
-    "url": "https://repo.nordvpn.com/deb/nordvpn/debian/pool/main/n/nordvpn/nordvpn_5.0.0_amd64.deb",
-    "hash": "sha256-F7/5WAAGaX3IJ3v/psp9cyWGs7kn2XOiCSN2Q6zeRAY="
+    "url": "https://repo.nordvpn.com/deb/nordvpn/debian/pool/main/n/nordvpn/nordvpn_5.4.1_amd64.deb",
+    "hash": "sha256-CfukzyKKDfC5EDx7NAqUr7feDbi2XMtIBGRvqKgUtlw="
   },
   "gui": {
-    "url": "https://repo.nordvpn.com/deb/nordvpn/debian/pool/main/n/nordvpn-gui/nordvpn-gui_5.0.0_amd64.deb",
-    "hash": "sha256-Obdnf3Rp0gfbRKa2awz6lMN1z0J6KyL09jTivQej/Eo="
+    "url": "https://repo.nordvpn.com/deb/nordvpn/debian/pool/main/n/nordvpn-gui/nordvpn-gui_5.4.1_amd64.deb",
+    "hash": "sha256-ZMskUufoiJ6ujl6EuZW8hxGkql2Y1bl9nT/Mb/3IuFA="
   }
 }
